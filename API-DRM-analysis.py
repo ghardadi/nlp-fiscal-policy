@@ -9,11 +9,11 @@ import pandas as pd
 import requests
 import os
 
-DRM_files = pd.read_excel("FY25 October DRM Operations.xlsx")
-DRM_ids = DRM_files["PROJ_ID"].to_list()
+DRM_files = pd.read_excel("PER Repository.xlsx", sheet_name="Full list")
+DRM_ids = DRM_files["P number"].to_list()
 
 # Specify the directory name
-directory_name = "Project Documents"
+directory_name = "Public Expenditure Review"
                 
 # Create the directory
 try:
@@ -67,7 +67,7 @@ project_data = pd.DataFrame()
 # keywords = ["projn", "docdt"]
 
 for project_id in DRM_ids:
-    url = f"https://search.worldbank.org/api/v3/wds?projectid={project_id}&lang=English&docty=Program%20Document&format=json"
+    url = f"https://search.worldbank.org/api/v3/wds?projectid={project_id}&lang=English&docty=Public%20Expenditure%20Review&format=json"
     response = requests.get(url)
 
     if response.status_code == 200:
