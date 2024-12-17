@@ -5,9 +5,12 @@ Created on Thu Nov 21 09:52:30 2024
 @author: wb582890
 """
 
+import random
+import numpy as np
 import pandas as pd
 import requests
 import os
+import shutil
 
 DRM_files = pd.read_excel("PER Repository.xlsx", sheet_name="Full list")
 DRM_ids = DRM_files["P number"].to_list()
@@ -44,7 +47,8 @@ def find_keyword_in_json(data, keyword):
                 return result
     return None
 
-def download_pdf(pdf_url, project_id, directory_name):
+def download_pdf(project_id, directory_name="Public Expenditure Review"):
+    pdf_url = f"https://search.worldbank.org/api/v3/wds?projectid={project_id}&lang=English&docty=Public%20Expenditure%20Review&format=json"
     try:
         # Send a GET request to the URL
         response = requests.get(pdf_url, stream=True)
@@ -84,9 +88,27 @@ for project_id in DRM_ids:
             title = title.split(" : ")[0]
             title = title.split("\n")[0]
             project_name = f"{project_id} {title[:120]} {docdt[:10]}"
-            download_pdf(pdf_url, project_name, directory_name)
+            download_pdf(project_name, directory_name)
         except:
             print(f"Error saving PDF: Program Document {project_id}")
     else:
         print(f"Program Document {project_id} not available")
-        
+
+random.seed(582890)
+
+project_id_loc = random.sample(range(1, 81), 20)
+DRM_samples = [os.listdir(directory_name)[i] for i in project_id_loc]
+
+sample_directory = "PER Samples"
+
+try:
+    os.makedirs(sample_directory)
+    print(f"Directory '{sample_directory}' created successfully.")
+except FileExistsError:
+    print(f"Directory '{sample_directory}' already exists.")
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+for i in DRM_samples:
+    shutil.copy(f'{directory_name}\\{i}', f'{sample_directory}\\{i}')
+    
