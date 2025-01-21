@@ -16,7 +16,7 @@ DRM_files = pd.read_excel("PER Repository.xlsx", sheet_name="Full list")
 DRM_ids = DRM_files["P number"].to_list()
 
 # Specify the directory name
-directory_name = "Public Expenditure Review"
+directory_name = "Public Expenditure Review1"
                 
 # Create the directory
 try:
@@ -47,15 +47,31 @@ def find_keyword_in_json(data, keyword):
                 return result
     return None
 
-def download_pdf(project_id, directory_name="Public Expenditure Review"):
-    pdf_url = f"https://search.worldbank.org/api/v3/wds?projectid={project_id}&lang=English&docty=Public%20Expenditure%20Review&format=json"
+def download_pdf(project_id, directory_name="Public Expenditure Review1"):
+    url = f"https://search.worldbank.org/api/v3/wds?projectid={project_id}&lang=English&docty=Public%20Expenditure%20Review&format=json"
+    
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        documents = response.json()
+            
+    # Parsing JSON data using recursion
+    pdf_url = find_keyword_in_json(documents, "pdfurl")
+    
     try:
+        title = find_keyword_in_json(documents, "display_title")
+        docdt = find_keyword_in_json(documents, "docdt")
+        
+        title = title.split(" : ")[0]
+        title = title.split("\n")[0]
+        project_name = f"{project_id} {title[:120]} {docdt[:10]}"
+        
         # Send a GET request to the URL
         response = requests.get(pdf_url, stream=True)
         response.raise_for_status()  # Raise an error for bad status codes
 
         # Open a local file with the specified filename
-        filename = f"{directory_name}\\{project_id}.pdf"
+        filename = f"{directory_name}\\{project_name}.pdf"
         with open(filename, "wb") as pdf_file:
             for chunk in response.iter_content(chunk_size=8192):
                 pdf_file.write(chunk)  # Write each chunk to the file
@@ -79,24 +95,22 @@ for project_id in DRM_ids:
             
     # Parsing JSON data using recursion
     pdf_url = find_keyword_in_json(documents, "pdfurl")
-    title = find_keyword_in_json(documents, "display_title")
-    docdt = find_keyword_in_json(documents, "docdt")
         
     if pdf_url != None:
         # project_data = pd.concat([project_data, temp_data])
         try:
-            title = title.split(" : ")[0]
-            title = title.split("\n")[0]
-            project_name = f"{project_id} {title[:120]} {docdt[:10]}"
-            download_pdf(project_name, directory_name)
+            download_pdf(project_id, directory_name)
         except:
             print(f"Error saving PDF: Program Document {project_id}")
     else:
         print(f"Program Document {project_id} not available")
 
+def count_files(directory):
+    return len([f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))])
+
 random.seed(582890)
 
-project_id_loc = random.sample(range(1, 81), 20)
+project_id_loc = random.sample(range(count_files(directory_name)), 20)
 DRM_samples = [os.listdir(directory_name)[i] for i in project_id_loc]
 
 sample_directory = "PER Samples"
